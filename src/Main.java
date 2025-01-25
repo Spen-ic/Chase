@@ -17,23 +17,16 @@ public class Main extends JPanel implements Runnable {
 
 
     // MAIN
-    private static final int FPS = 60;
-    private int frames;
     private Thread loopThread;
 
     private long gameStartTime = System.currentTimeMillis();
     private int millisecondsPassed = 0;
-
-    private static final int windowSize = 600;
     
     // CIRCLES
-    private final int maxRadius = 120;
-    private final int maxLifespan = (int)(200 * (double) (FPS / 60)); // in frames
     private double movingAngle = Math.PI * 2 * (Math.random() - 0.5);
     private double movingAngleChange = 0.015;
-    private final float radiusChange = (float) 0.02;
     private float lastAddedX, lastAddedY = 0;
-    private float creationRadius = maxRadius;
+    private float creationRadius = Constants.Circles.START_RADIUS;
 
     private Circle[] openCirclePoints;
 
@@ -46,12 +39,10 @@ public class Main extends JPanel implements Runnable {
     private boolean clickedYet = false;
 
     // CHARACTER
-    private final double startVelocity = 6.0;
     private double camX = 0;
     private double camY = 0;
     private double angleToMouse;
-    private final int characterRadius = 20;
-    private double characterVelocity = startVelocity;
+    private double characterVelocity = Constants.Player.START_VELOCITY;
 
     // SCORING
     private int score = 0;
@@ -59,8 +50,8 @@ public class Main extends JPanel implements Runnable {
     private double scoreSizeMulti = 1.0;
 
     public Main() {
-        openCirclePoints = new Circle[maxLifespan + 10];
-        openCirclePoints[0] = new Circle(0, 0, maxRadius, maxLifespan);
+        openCirclePoints = new Circle[Constants.Circles.MAX_LIFESPAN + 10];
+        openCirclePoints[0] = new Circle(0, 0, Constants.Circles.START_RADIUS, Constants.Circles.MAX_LIFESPAN);
 
         addMouseMotionListener(new MouseMotionAdapter() {
             @Override
@@ -90,18 +81,17 @@ public class Main extends JPanel implements Runnable {
                 gameOver = false;
                 camX = 0;
                 camY = 0;
-                characterVelocity = startVelocity;
+                characterVelocity = Constants.Player.START_VELOCITY;
                 score = 0;
                 scoreSizeMulti = 1.0;
-                openCirclePoints = new Circle[maxLifespan + 10];
-                openCirclePoints[0] = new Circle(0, 0, maxRadius, maxLifespan);
+                openCirclePoints = new Circle[Constants.Circles.MAX_LIFESPAN + 10];
+                openCirclePoints[0] = new Circle(0, 0, Constants.Circles.START_RADIUS, Constants.Circles.MAX_LIFESPAN);
                 movingAngle = Math.PI * 2 * (Math.random() - 0.5);
             } else {
                 movingAngleChange = 0.04 * (Math.random() - 0.5);
                 lastAddedX = 0;
                 lastAddedY = 0;
-                creationRadius = maxRadius;
-                frames = 0;
+                creationRadius = Constants.Circles.START_RADIUS;
 
                 clickedYet = true;
                 gameOver = false;
@@ -146,7 +136,7 @@ public class Main extends JPanel implements Runnable {
         // System.out.println(movingAngle);
         // System.out.println(camX + " " + camY);
         currentColor = hsvToRgb(currentHue, (float) 0.78, (float) 0.92);
-        currentHue += Math.max(0.2, score/100000.0);
+        currentHue += Math.max(0.2, score * Constants.Color.COLOR_RAMP);
         currentHue = currentHue % 360;
         if (clickedYet) {
             millisecondsPassed = (int)(System.currentTimeMillis() - gameStartTime);
@@ -155,25 +145,25 @@ public class Main extends JPanel implements Runnable {
             // System.out.println(scoreSizeMulti);
             scoreSizeMulti = Math.max(Math.min(scoreSizeMulti, 2.0), 1.0);
 
-            if (Math.random() < 0.5 / FPS) {
+            if (Math.random() < 0.5 / Constants.Main.FPS) {
                 movingAngleChange = 0.04* (Math.random() - 0.5);
             }
             movingAngle += movingAngleChange;
             
             characterVelocity *= 1.0001;
-            angleToMouse = Math.atan2((double) -(mouseY - windowSize / 2), (double) (mouseX - windowSize / 2));
+            angleToMouse = Math.atan2((double) - (mouseY - Constants.Main.WINDOW_SIZE / 2), (double) (mouseX - Constants.Main.WINDOW_SIZE / 2));
             camX += characterVelocity * Math.cos(angleToMouse);
             camY += characterVelocity * -Math.sin(angleToMouse);
     
-            if (creationRadius > characterRadius + 14) {
-                creationRadius -= radiusChange;
+            if (creationRadius > Constants.Player.PLAYER_RADIUS + 14) {
+                creationRadius -= Constants.Circles.RADIUS_CHANGE;
             }
 
             addNewCircle(new Circle(
             lastAddedX + (float)(characterVelocity * Math.cos(movingAngle)),
             lastAddedY + (float)(characterVelocity * Math.sin(movingAngle)),
             creationRadius,
-            maxLifespan
+            Constants.Circles.MAX_LIFESPAN
             ));
 
             for (int i = 0; i < openCirclePoints.length; i++) {
@@ -216,7 +206,7 @@ public class Main extends JPanel implements Runnable {
 
             if (circle != null) {
                 double distToCenter = Math.sqrt(Math.pow(circle.getPhysicalX() - camX, 2) + Math.pow(circle.getPhysicalY() - camY, 2));
-                if (distToCenter < circle.getPhysicalRadius() - characterRadius) {
+                if (distToCenter < circle.getPhysicalRadius() - Constants.Player.PLAYER_RADIUS) {
                     return true;
                 }
             }
@@ -233,7 +223,7 @@ public class Main extends JPanel implements Runnable {
 
         //draw background color
         g2d.setColor(currentColor);
-        g2d.fillRect(0, 0, windowSize, windowSize);
+        g2d.fillRect(0, 0, Constants.Main.WINDOW_SIZE, Constants.Main.WINDOW_SIZE);
 
         //draw circles
         g2d.setColor(Color.BLACK);
@@ -242,13 +232,13 @@ public class Main extends JPanel implements Runnable {
                 int radius = circle.getPhysicalRadius();
 
                 //should add optimizations for circles off screen that dont need to be rendered
-                g2d.fillOval(windowSize / 2 - (int) camX + (circle.getPhysicalX() - radius), windowSize / 2 - (int) camY + (circle.getPhysicalY() - radius), radius * 2, radius * 2);
+                g2d.fillOval(Constants.Main.WINDOW_SIZE / 2 - (int) camX + (circle.getPhysicalX() - radius), Constants.Main.WINDOW_SIZE / 2 - (int) camY + (circle.getPhysicalY() - radius), radius * 2, radius * 2);
             }
         }
 
         //draw character (position in the world is just camX) at center
         g2d.setColor(Color.WHITE);
-        g2d.fillOval(windowSize / 2 - characterRadius, windowSize / 2 - characterRadius, 2 * characterRadius, 2 * characterRadius);
+        g2d.fillOval(Constants.Main.WINDOW_SIZE / 2 - Constants.Player.PLAYER_RADIUS, Constants.Main.WINDOW_SIZE / 2 - Constants.Player.PLAYER_RADIUS, 2 * Constants.Player.PLAYER_RADIUS, 2 * Constants.Player.PLAYER_RADIUS);
 
         //draw start arrow
         if (!clickedYet && !gameOver) {
@@ -257,8 +247,8 @@ public class Main extends JPanel implements Runnable {
 
             g2d.setStroke(new BasicStroke(5));
             
-            int tipPointX = (int) (Math.cos(movingAngle) * (maxRadius + off)) + windowSize / 2;
-            int tipPointY = (int) (Math.sin(movingAngle) * (maxRadius + off)) + windowSize / 2;
+            int tipPointX = (int) (Math.cos(movingAngle) * (Constants.Circles.START_RADIUS + off)) + Constants.Main.WINDOW_SIZE / 2;
+            int tipPointY = (int) (Math.sin(movingAngle) * (Constants.Circles.START_RADIUS + off)) + Constants.Main.WINDOW_SIZE / 2;
 
             g2d.setColor(new Color(0, 0, 0, 180));
             g2d.drawLine(tipPointX, tipPointY + 5, tipPointX + (int)((line) * -Math.cos(movingAngle + Math.PI / 4)), tipPointY + 5 + (int)((line) * -Math.sin(movingAngle + Math.PI / 4)));
@@ -282,12 +272,12 @@ public class Main extends JPanel implements Runnable {
         
         FontMetrics metrics = g2d.getFontMetrics(font);
         int textWidth = metrics.stringWidth(str);
-        int xText = (windowSize - textWidth) / 2;
+        int xText = (Constants.Main.WINDOW_SIZE - textWidth) / 2;
         int yText = 10 + font.getSize();
         var preTransform = g2d.getTransform();
         if (clickedYet || gameOver) {
             double theta = 0.2 * Math.min(Math.max(Math.sqrt(score) / 125 - 2, 0), 2.5) * Math.sin(millisecondsPassed / 1000.0); //temp
-            g2d.rotate(theta, windowSize / 2, 4 + yText - font.getSize() / 2);
+            g2d.rotate(theta, Constants.Main.WINDOW_SIZE / 2, 4 + yText - font.getSize() / 2);
         }
 
         g2d.setColor(new Color(0, 0, 0, 180));
@@ -303,8 +293,8 @@ public class Main extends JPanel implements Runnable {
             str = "GAME OVER";
             metrics = g2d.getFontMetrics(overFont);
             textWidth = metrics.stringWidth(str);
-            xText = (windowSize - textWidth) / 2;
-            yText = windowSize / 2 - 50;
+            xText = (Constants.Main.WINDOW_SIZE - textWidth) / 2;
+            yText = Constants.Main.WINDOW_SIZE / 2 - 50;
 
             g2d.setColor(new Color(0, 0, 0, 180));
             g2d.drawString(str, xText, yText + 5);
@@ -317,12 +307,12 @@ public class Main extends JPanel implements Runnable {
     
     public static void main(String[] args) {
         JFrame frame = new JFrame();
-        frame.setSize(new Dimension(windowSize, windowSize)); 
+        frame.setSize(new Dimension(Constants.Main.WINDOW_SIZE, Constants.Main.WINDOW_SIZE)); 
         frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         frame.setLocationRelativeTo(null);
 
         Main panel = new Main();
-        panel.setPreferredSize(new Dimension(windowSize, windowSize));
+        panel.setPreferredSize(new Dimension(Constants.Main.WINDOW_SIZE, Constants.Main.WINDOW_SIZE));
         panel.startLoop();
 
         frame.add(panel);
@@ -338,10 +328,9 @@ public class Main extends JPanel implements Runnable {
     @Override
     public void run() {
 
-        int time = 1000/FPS;
+        int time = 1000/Constants.Main.FPS;
 
         while (loopThread != null) {
-            frames++;
             update();
             repaint();
 
