@@ -8,6 +8,8 @@ public class Constants {
         public static final int START_RADIUS = 120;
         public static final int MAX_LIFESPAN = (int)(200 * (Constants.Main.FPS / 60.0));
         public static final float RADIUS_CHANGE = (float) 0.02;
+        public static final int SHADOW_DIST = 25;
+        public static final int NUM_SHADOWS = 5;
     }
 
     public static final class Color {

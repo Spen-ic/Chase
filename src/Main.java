@@ -197,10 +197,6 @@ public class Main extends JPanel implements Runnable {
     }
 
     public boolean isInBounds() {
-        // to PASS collisions, the character must be inside at least one circle
-        // if it is, return true; iterate until true or until exhausted, then =false
-        
-        // **** May need to add character radius to camX and camY because not sure if top left calculations...
         for (int i = 0; i < openCirclePoints.length; i++) {
             Circle circle = openCirclePoints[i];
 
@@ -226,13 +222,21 @@ public class Main extends JPanel implements Runnable {
         g2d.fillRect(0, 0, Constants.Main.WINDOW_SIZE, Constants.Main.WINDOW_SIZE);
 
         //draw circles
-        g2d.setColor(Color.BLACK);
         for (Circle circle : openCirclePoints) {
             if (circle != null) {
+                g2d.setColor(Color.BLACK);
                 int radius = circle.getPhysicalRadius();
 
                 //should add optimizations for circles off screen that dont need to be rendered
                 g2d.fillOval(Constants.Main.WINDOW_SIZE / 2 - (int) camX + (circle.getPhysicalX() - radius), Constants.Main.WINDOW_SIZE / 2 - (int) camY + (circle.getPhysicalY() - radius), radius * 2, radius * 2);
+                
+                // draw shadows
+                // for(int i = 0; i < Constants.Circles.NUM_SHADOWS; i++) {
+                //     g2d.setColor(new Color(0, 0, 0, 255 - i * (255 / (Constants.Circles.NUM_SHADOWS + 1))));
+
+                //     int shadowMargin = i * (Constants.Circles.SHADOW_DIST / Constants.Circles.NUM_SHADOWS);
+                //     g2d.fillOval(Constants.Main.WINDOW_SIZE / 2 - (int) camX + (circle.getPhysicalX() - radius - shadowMargin), Constants.Main.WINDOW_SIZE / 2 - (int) camY + (circle.getPhysicalY() - radius - shadowMargin), radius * 2 + 2 * shadowMargin, radius * 2 + 2 * shadowMargin);
+                // }
             }
         }
 
@@ -287,6 +291,7 @@ public class Main extends JPanel implements Runnable {
         
         g2d.setTransform(preTransform);
 
+        // draw game over text
         if (gameOver) {
             Font overFont = new Font("SansSerif", Font.BOLD, 50);
             g2d.setFont(overFont);            
